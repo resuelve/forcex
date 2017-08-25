@@ -21,13 +21,24 @@ defmodule Mix.Tasks.Compile.Forcex do
       client
       |> Forcex.describe_global
       |> Map.get(:sobjects)
+      |> filter_modules
 
     for sobject <- sobjects do
       sobject
       |> generate_module(client)
       |> Code.compile_quoted
     end
+  end
 
+  defp filter_modules(sobjects) do
+    case is_list(config[:modules]) do
+      true ->
+        Enum.filter(sobjects, fn sobject ->
+          Map.get(sobject, "name", nil) in config[:modules]
+        end)
+      false ->
+        sobjects
+    end
   end
 
   defp generate_module(sobject, client) do
@@ -215,4 +226,6 @@ defmodule Mix.Tasks.Compile.Forcex do
 "     * `#{value}`\n"
   end
   defp docs_for_picklist_values(_), do: ""
+
+  defp config, do: Application.get_env(:forcex, Forcex.Client)
 end
