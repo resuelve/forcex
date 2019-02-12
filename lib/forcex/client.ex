@@ -44,17 +44,32 @@ defmodule Forcex.Client do
         Forcex.Client.login
         |> Forcex.Client.locate_services
   """
-  def login(c \\ default_config()) do
-    login(c, %__MODULE__{})
+  @spec login(map, integer) :: %Forcex.Client{}
+  @spec login(map, %Forcex.Client{}, integer) :: %Forcex.Client{}
+  def login(c \\ default_config(), index \\ 0) do
+    login(c, %__MODULE__{}, index)
+  end
+  def login(conf, starting_struct, index) do
+    conf
+    |> Enum.into(%{}, fn {key, value} ->
+      _set_credentials(key, value, index)
+    end)
+    |> Map.put(:password, "#{conf.password}#{conf.security_token}")
+    |> Map.put(:grant_type, "password")
+    |> URI.encode_query()
+    |> (&Forcex.post("/services/oauth2/token?#{&1}", starting_struct)).()
+    |> handle_login_response
   end
 
-  def login(conf, starting_struct) do
-    login_payload =
-      conf
-      |> Map.put(:password, "#{conf.password}#{conf.security_token}")
-      |> Map.put(:grant_type, "password")
-    Forcex.post("/services/oauth2/token?#{URI.encode_query(login_payload)}", starting_struct)
-    |> handle_login_response
+  @spec _set_credentials(atom, String.t, integer) :: tuple
+  defp _set_credentials(key, value, index) do
+    values = String.split(value, ",")
+
+    if Enum.at(values, index) != nil do
+      {key,  Enum.at(values, index)}
+    else
+      {key, Enum.at(values, 0)}
+    end
   end
 
   def locate_services(client) do
@@ -64,7 +79,7 @@ defmodule Forcex.Client do
   def create_sobject(client \\ %__MODULE__{}, name \\ "SOBject", map \\ %{})
 
   def create_sobject(client, name, map) when is_atom(name) do
-    name = name 
+    name = name
     |> Atom.to_string
     |> String.capitalize
 
