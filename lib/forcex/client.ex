@@ -54,7 +54,7 @@ defmodule Forcex.Client do
     |> Enum.into(%{}, fn {key, value} ->
       _set_credentials(key, value, index)
     end)
-    |> Map.put(:password, "#{conf.password}#{conf.security_token}")
+    |> (&Map.put(&1, :password, "#{&1.password}#{&1.security_token}")).()
     |> Map.put(:grant_type, "password")
     |> URI.encode_query()
     |> (&Forcex.post("/services/oauth2/token?#{&1}", starting_struct)).()
