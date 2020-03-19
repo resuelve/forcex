@@ -1,5 +1,9 @@
 defmodule Forcex.Client do
-  defstruct access_token: nil, api_version: "36.0", token_type: nil, endpoint: "https://login.salesforce.com", services: %{}
+  defstruct access_token: nil,
+            api_version: "36.0",
+            token_type: nil,
+            endpoint: "https://login.salesforce.com",
+            services: %{}
 
   require Logger
 
@@ -13,6 +17,8 @@ defmodule Forcex.Client do
 
   Supplying a Map of login credentials must be in the form of
 
+  ```elixir
+
       %{
         username: "...",
         password: "...",
@@ -20,6 +26,8 @@ defmodule Forcex.Client do
         client_id: "...",
         client_secret: "..."
       }
+
+  ```
 
   Environment variables
     - `SALESFORCE_USERNAME`
@@ -30,6 +38,8 @@ defmodule Forcex.Client do
 
   Application configuration
 
+  ```elixir
+
       config :forcex, Forcex.Client,
         username: "user@example.com",
         password: "my_super_secret_password",
@@ -37,18 +47,26 @@ defmodule Forcex.Client do
         client_id: "CONNECTED_APP_OAUTH_CLIENT_ID",
         client_secret: "CONNECTED_APP_OAUTH_CLIENT_SECRET"
 
+  ```
+
   Will require additional call to `locate_services/1` to identify which Force.com
   services are availabe for your deployment.
+
+  ```elixir
 
       client =
         Forcex.Client.login
         |> Forcex.Client.locate_services
+
+  ```
+
   """
   @spec login(map, integer) :: %Forcex.Client{}
   @spec login(map, %Forcex.Client{}, integer) :: %Forcex.Client{}
   def login(c \\ default_config(), index \\ 0) do
     login(c, %__MODULE__{}, index)
   end
+
   def login(conf, starting_struct, index) do
     conf
     |> Enum.into(%{}, fn {key, value} ->
@@ -61,12 +79,12 @@ defmodule Forcex.Client do
     |> handle_login_response
   end
 
-  @spec _set_credentials(atom, String.t, integer) :: tuple
+  @spec _set_credentials(atom, String.t(), integer) :: tuple
   defp _set_credentials(key, value, index) do
     values = String.split(value, ",")
 
     if Enum.at(values, index) != nil do
-      {key,  Enum.at(values, index)}
+      {key, Enum.at(values, index)}
     else
       {key, Enum.at(values, 0)}
     end
@@ -79,42 +97,56 @@ defmodule Forcex.Client do
   def create_sobject(client \\ %__MODULE__{}, name \\ "SOBject", map \\ %{})
 
   def create_sobject(client, name, map) when is_atom(name) do
-    name = name
-    |> Atom.to_string
-    |> String.capitalize
+    name =
+      name
+      |> Atom.to_string()
+      |> String.capitalize()
 
     client
     |> create_sobject(name, map)
   end
+
   def create_sobject(client, name, map) do
     Forcex.post("/services/data/v20.0/sobjects/#{name}", map, client)
   end
 
-  defp handle_login_response(%{access_token: token, token_type: token_type, instance_url: endpoint}) do
+  defp handle_login_response(%{
+         access_token: token,
+         token_type: token_type,
+         instance_url: endpoint
+       }) do
     %__MODULE__{access_token: token, token_type: token_type, endpoint: endpoint}
   end
+
   defp handle_login_response({status_code, error_message}) do
-    Logger.warn "Cannot log into SFDC API. Please ensure you have Forcex properly configured. Got error code #{status_code} and message #{inspect error_message}"
+    Logger.warn(
+      "Cannot log into SFDC API. Please ensure you have Forcex properly configured. Got error code #{
+        status_code
+      } and message #{inspect(error_message)}"
+    )
+
     %__MODULE__{}
   end
 
   def default_config() do
     [:username, :password, :security_token, :client_id, :client_secret]
-    |> Enum.map(&( {&1, get_val_from_env(&1)}))
+    |> Enum.map(&{&1, get_val_from_env(&1)})
     |> Enum.into(%{})
   end
 
   defp get_val_from_env(key) do
     key
     |> env_var
-    |> System.get_env
+    |> System.get_env()
     |> case do
       nil ->
         Application.get_env(:forcex, __MODULE__, [])
         |> Keyword.get(key)
-      val -> val
+
+      val ->
+        val
     end
   end
 
-  defp env_var(key), do: "SALESFORCE_#{key |> to_string |> String.upcase}"
+  defp env_var(key), do: "SALESFORCE_#{key |> to_string |> String.upcase()}"
 end

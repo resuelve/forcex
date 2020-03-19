@@ -16,11 +16,11 @@ defmodule Forcex.Mixfile do
       # compilers: [:forcex] ++ Mix.compilers,
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
-        "coveralls": :test,
+        coveralls: :test,
         "coveralls.detail": :test,
         "coveralls.html": :test,
         "coveralls.post": :test,
-        "docs": :dev,
+        docs: :dev,
         "hex.docs": :dev,
       ],
       dialyzer: [
@@ -46,15 +46,6 @@ defmodule Forcex.Mixfile do
     [applications: [:logger, :httpoison, :erlsom, :exjsx, :ssl]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
     [
       {:httpoison, "~> 0.10.0"},
@@ -72,6 +63,6 @@ defmodule Forcex.Mixfile do
   defp package do
     [ maintainers: ["Jeff Weiss"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/jeffweiss/forcex"} ]
+      links: %{"Github" => "https://github.com/resuelve/forcex"} ]
   end
 end
